@@ -26,7 +26,7 @@ func PlayAudioWithMPG123(portAudioDeviceInfo *portaudio.DeviceInfo) {
 	ChkErr(err)
 
 	// fileName := os.Args[1]
-	ChkErr(decoder.Open("./piano.mp3"))
+	ChkErr(decoder.Open("./sound.mp3"))
 	defer decoder.Close()
 
 	// get audio format information
