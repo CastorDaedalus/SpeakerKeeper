@@ -10,3 +10,10 @@ The app runs silently in the background and automatically places an icon in the 
 
 From the menu, you can reset the configuration or stop playing the audio file.
 The app is customizable, and the sound file "sound.mp3" can be replaced by any MP3 file you want.
+
+
+
+## Notes
+
+This is potentially compatible with Linux/MacOS but I need to set up the compilers for them since this uses Cgo in the dependencies.
+Maybe someone who knows more than me can help set that up. 
