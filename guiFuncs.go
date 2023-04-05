@@ -69,9 +69,9 @@ func onReady() {
 				getNecessaryConfig()
 				if isConfigValid() {
 					loop.startAudioLoop()
-					if playing == false {
-						toggle()
-					}
+				}
+				if playing != loop.active {
+					toggle()
 				}
 
 			case <-stop.ClickedCh:
