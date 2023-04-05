@@ -23,29 +23,33 @@ func getNecessaryConfig() {
 		needToSave = true
 	}
 
-	if runtimeConfig.SelectedDeviceIndex < 0 {
+	if runtimeConfig.SelectedDeviceName == "" {
 		outputDevicesStartIndex, err := getOutputDeviceIndex(portAudioDevices)
 		ChkErr(err)
 		guiSelectedDeviceName, err = getUserSelectedAudioDevice(portAudioDevices[outputDevicesStartIndex:])
-		ChkErr(err)
-
-		for i, portAudioDevice := range portAudioDevices {
-			if guiSelectedDeviceName == portAudioDevice.Name {
-				runtimeConfig.SelectedDeviceIndex = i
-				needToSave = true
+		if err == nil {
+			for _, portAudioDevice := range portAudioDevices {
+				if guiSelectedDeviceName == portAudioDevice.Name {
+					runtimeConfig.SelectedDeviceName = portAudioDevice.Name
+					needToSave = true
+				}
 			}
-		}
 
-		if runtimeConfig.SelectedDeviceIndex < 0 {
-			err = errors.New("unable to find audio device")
-			ChkErr(err)
+			if runtimeConfig.SelectedDeviceName == "" {
+				err = errors.New("unable to find audio device")
+				panic(err)
+			}
+		} else {
+			return
 		}
 
 	}
 
 	if runtimeConfig.TimeInterval <= 0 {
-		runtimeConfig.TimeInterval = getUserInputWaitTime()
-		needToSave = true
+		runtimeConfig.TimeInterval, err = getUserInputWaitTime()
+		if err == nil {
+			needToSave = true
+		}
 	}
 
 	if needToSave {
@@ -59,13 +63,19 @@ func getOutputDeviceIndex(portAudioDevices []*portaudio.DeviceInfo) (int, error)
 	var err error
 
 	for i := 0; i < len(portAudioDevices); i++ {
-		if strings.Contains(portAudioDevices[i].Name, "Microsoft Sound Mapper - Output") ||
-			strings.Contains(portAudioDevices[i].Name, "Default Output Device") {
-			portAudioDevices[i].Name = "Default Output Device"
+		if strings.Contains(portAudioDevices[i].Name, "Microsoft Sound Mapper - Output") {
 			return i, err
 		}
 	}
 
 	return -1, errors.New("couldn't find primary output device in portaudio devices")
 
+}
+
+func isConfigValid() bool {
+	if runtimeConfig.SelectedDeviceName != "" && runtimeConfig.TimeInterval > 0 {
+		return true
+	} else {
+		return false
+	}
 }

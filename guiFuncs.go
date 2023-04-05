@@ -29,7 +29,9 @@ func initMainLoop() {
 }
 
 func onReady() {
-	loop.startAudioLoop()
+	if isConfigValid() {
+		loop.startAudioLoop()
+	}
 
 	systray.SetTemplateIcon(icon.Data, icon.Data)
 	systray.SetTitle("SpeakerKeeper")
@@ -41,7 +43,12 @@ func onReady() {
 	systray.AddSeparator()
 	quitBtn := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
-		start.Hide()
+		if loop.active {
+			start.Hide()
+		} else {
+			stop.Hide()
+		}
+
 		playing := true
 		toggle := func() {
 			if playing {
@@ -60,15 +67,22 @@ func onReady() {
 				loop.stopAudioLoop()
 				runtimeConfig = baseConfig
 				getNecessaryConfig()
-				loop.startAudioLoop()
+				if isConfigValid() {
+					loop.startAudioLoop()
+					if playing == false {
+						toggle()
+					}
+				}
 
 			case <-stop.ClickedCh:
 				loop.stopAudioLoop()
 				toggle()
 
 			case <-start.ClickedCh:
-				loop.startAudioLoop()
-				toggle()
+				if isConfigValid() {
+					loop.startAudioLoop()
+					toggle()
+				}
 			}
 		}
 	}()
@@ -98,7 +112,12 @@ func (loop *audioLoop) startAudioLoop() {
 				go func() {
 					devices, err := portaudio.Devices()
 					ChkErr(err)
-					PlayAudioWithMPG123(devices[runtimeConfig.SelectedDeviceIndex])
+					for _, device := range devices {
+						if runtimeConfig.SelectedDeviceName == device.Name {
+							PlayAudioWithMPG123(device)
+							break
+						}
+					}
 				}()
 			case <-loop.stop:
 				fmt.Println("Stopping audio loop")
@@ -132,21 +151,23 @@ func getUserSelectedAudioDevice(portAudioDevices []*portaudio.DeviceInfo) (strin
 		zenity.RadioList(),
 		zenity.WindowIcon(zenity.QuestionIcon),
 	)
-	ChkErr(err)
 
 	return selected, err
 
 }
 
-func getUserInputWaitTime() float64 {
+func getUserInputWaitTime() (float64, error) {
 	var minutesFloat float64
+	var err error
 	for {
 		minutes, err := zenity.Entry(
 			"Time interval in minutes",
 			zenity.Title("Sound playing frequency"),
 			zenity.WindowIcon(zenity.QuestionIcon),
 		)
-		ChkErr(err)
+		if err != nil {
+			return 0, err
+		}
 		minutesFloat, err = strconv.ParseFloat(minutes, 64)
 		if err != nil || minutesFloat < 0 {
 			zenity.Warning("Please enter only numbers greater than 0",
@@ -157,7 +178,7 @@ func getUserInputWaitTime() float64 {
 		}
 	}
 
-	return math.Floor(minutesFloat*100) / 100
+	return math.Floor(minutesFloat*100) / 100, err
 }
 
 func printPortAudioDevicesWithFullNames(portAudioDevices []*portaudio.DeviceInfo) {

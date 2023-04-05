@@ -5,8 +5,8 @@ import (
 )
 
 var filename = "config.json"
-var baseConfig Config = Config{SelectedDeviceIndex: -1}
-var runtimeConfig Config = Config{SelectedDeviceIndex: -1}
+var baseConfig Config = Config{}
+var runtimeConfig Config = Config{}
 
 func main() {
 
