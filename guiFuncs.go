@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"math"
+	"speakerkeeper/icon"
 	"strconv"
 	"time"
 
 	"github.com/getlantern/systray"
-	"github.com/getlantern/systray/example/icon"
 	"github.com/gordonklaus/portaudio"
 	"github.com/ncruces/zenity"
 )
